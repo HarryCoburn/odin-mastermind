@@ -8,12 +8,22 @@ class GameBoard
   # Shorthand for the six colors: white, black, yellow, red, blue, green
   @@colors = %w[w b y r u g]
 
-  attr_reader :secret
+  attr_reader :secret, :current_round, :max_rounds
 
   def initialize
     @secret = 4.times.map { @@colors.sample }
+    @current_round = 1
+    @max_rounds = 12
+    @round_record = {}
   end
 end
 
-board = GameBoard.new
-puts board.secret
+def mastermind
+  board = GameBoard.new
+  puts 'Enter your guess of four colors by inputting the capital letter: White, Black, Yellow, Red, blUe, Green: '
+  guess = gets.chomp.downcase.split('')
+  puts "Computer key: #{board.secret}"
+  puts "Your guess: #{guess}"
+end
+
+mastermind
