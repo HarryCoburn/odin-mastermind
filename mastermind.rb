@@ -25,6 +25,19 @@ def mastermind
   while board.current_round <= board.max_rounds
     # get input
     puts "Current round: #{board.current_round}"
+    guess = ask_for_player_input(board)
+
+    puts "Computer key: #{board.secret}"
+    puts "Your guess: #{guess}"
+    puts
+    board.end_round
+  end
+  puts 'The game is over.'
+end
+
+def ask_for_player_input(board)
+  valid_input = false
+  until valid_input
     puts 'Enter your guess of four colors by inputting the capital letter: White, Black, Yellow, Red, blUe, Green: '
     guess = gets.chomp.downcase.split('')
     if guess.length != 4
@@ -35,14 +48,11 @@ def mastermind
       puts 'Incorrect color entered. Only put in the color capitals. Try again'
       puts
       next
+    else
+      valid_input = true
     end
-
-    puts "Computer key: #{board.secret}"
-    puts "Your guess: #{guess}"
-    puts
-    board.end_round
   end
-  puts 'The game is over.'
+  guess
 end
 
 mastermind
