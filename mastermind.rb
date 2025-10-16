@@ -23,20 +23,38 @@ class GameBoard
   def check_guess(guess)
     player_wins if guess == @secret
     correct = get_matches(guess)
-    puts "The correct guesses are: #{correct}"
+    puts "You have #{correct[0]} colors in the right position"
+    puts "You have #{correct[1]} colors in the wrong position"
   end
 
   def get_matches(guess)
     matches = []
     color_present = []
 
+    # Exact matches
     guess.each_with_index do |color, i|
-      puts color
-      puts @secret[i]
       matches.push(i) if color == @secret[i]
     end
 
-    matches
+    stripped_guess = guess.reject.with_index { |_, idx| matches.include?(idx) }
+    # puts "Stripped guess is: #{stripped_guess}"
+    stripped_secret = @secret.reject.with_index { |_, idx| matches.include?(idx) }
+    # puts "Stripped secret is: #{stripped_secret}"
+
+    # Right color, wrong position
+    stripped_guess.each_with_index do |color, i|
+      if stripped_secret.include?(color)
+        if stripped_secret.count(color) == 1
+          color_present.push(i)
+        else
+          color_present.push(i)
+          stripped_secret.delete_at(stripped_secret.index(color) || stripped_secret.length)
+        end
+      end
+    end
+    # puts "Present colors not matched are: #{color_present}"
+
+    [matches.length, color_present.length]
   end
 
   def player_wins
