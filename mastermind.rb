@@ -13,7 +13,15 @@ class GameBoard
     @secret = @password_length.times.map { @colors.sample }
     @current_round = 1
     @max_rounds = 12
-    @round_record = {}
+    @round_record = []
+  end
+
+  def print_board
+    return if @round_record == []
+
+    @round_record.each do |record|
+      puts "Round #{record[3]}   Guess: #{record[0]}   Correct: #{record[1]}   Right Color: #{record[2]}"
+    end
   end
 
   def end_round
@@ -25,6 +33,8 @@ class GameBoard
     correct = get_matches(guess)
     puts "You have #{correct[0]} colors in the right position"
     puts "You have #{correct[1]} colors in the wrong position"
+    puts
+    @round_record[@current_round - 1] = [guess, correct[0], correct[1], @current_round]
   end
 
   def get_matches(guess)
@@ -66,13 +76,14 @@ def mastermind
   board = GameBoard.new
   while board.current_round <= board.max_rounds
     # get input
-    puts "Current round: #{board.current_round}"
+
     guess = ask_for_player_input(board)
 
     puts "Computer key: #{board.secret}"
     puts "Your guess: #{guess}"
     puts
     board.check_guess(guess)
+    board.print_board
     board.end_round
   end
   puts 'The game is over.'
