@@ -29,46 +29,52 @@ class GameBoard
   end
 
   def check_guess(guess)
-    player_wins if guess == @secret
-    correct = get_matches(guess)
+    return player_wins if player_win?(guess)
+
+    correct = get_results(guess)
     puts "You have #{correct[0]} colors in the right position"
     puts "You have #{correct[1]} colors in the wrong position"
     puts
     @round_record[@current_round - 1] = [guess, correct[0], correct[1], @current_round]
   end
 
+  def get_results(guess)
+    matches = get_matches(guess)
+    stripped_guess = strip_matches(guess, matches)
+    stripped_secret = strip_matches(@secret, matches)
+    color_present = get_unmatched_colors(stripped_guess, stripped_secret)
+    [matches.length, color_present.length]
+  end
+
   def get_matches(guess)
     matches = []
-    color_present = []
-
     # Exact matches
     guess.each_with_index do |color, i|
       matches.push(i) if color == @secret[i]
     end
+    matches
+  end
 
-    stripped_guess = guess.reject.with_index { |_, idx| matches.include?(idx) }
-    # puts "Stripped guess is: #{stripped_guess}"
-    stripped_secret = @secret.reject.with_index { |_, idx| matches.include?(idx) }
-    # puts "Stripped secret is: #{stripped_secret}"
-
-    # Right color, wrong position
-    stripped_guess.each_with_index do |color, i|
-      if stripped_secret.include?(color)
-        if stripped_secret.count(color) == 1
-          color_present.push(i)
-        else
-          color_present.push(i)
-          stripped_secret.delete_at(stripped_secret.index(color) || stripped_secret.length)
-        end
+  def get_unmatched_colors(stripped_guess, stripped_secret)
+    stripped_guess.each_with_index.filter_map do |color, i|
+      if (index = stripped_secret.index(color)) # Ruby will use the returned value for the check AND do the assignment (!)
+        stripped_secret.delete_at(index)
+        i
       end
     end
-    # puts "Present colors not matched are: #{color_present}"
+  end
 
-    [matches.length, color_present.length]
+  def strip_matches(to_strip, matches)
+    to_strip.reject.with_index { |_, idx| matches.include?(idx) }
+  end
+
+  def player_win?(guess)
+    guess == @secret
   end
 
   def player_wins
-    puts 'You win!'
+    @current_round = @max_rounds
+    puts 'You guessed the secret!'
   end
 end
 
@@ -79,34 +85,39 @@ def mastermind
 
     guess = ask_for_player_input(board)
 
+    puts
     puts "Computer key: #{board.secret}"
     puts "Your guess: #{guess}"
     puts
     board.check_guess(guess)
+    break if board.player_win?(guess)
+
     board.print_board
     board.end_round
   end
+  puts 'You did not guess the secret in time. You lose' unless board.player_win?(guess)
   puts 'The game is over.'
 end
 
 def ask_for_player_input(board)
-  valid_input = false
-  until valid_input
+  loop do
     puts 'Enter your guess of four colors by inputting the capital letter: White, Black, Yellow, Red, blUe, Green: '
     guess = gets.chomp.downcase.split('')
-    if guess.length != 4
-      puts 'Incorrect number of colors entered. Try again. Do not separate colors by spaces.'
-      puts
-      next
-    elsif !guess.all? { |color| board.colors.include?(color) }
-      puts 'Incorrect color entered. Only put in the color capitals. Try again'
-      puts
-      next
-    else
-      valid_input = true
-    end
+
+    error = validate_guess(guess, board)
+    return guess unless error
+
+    puts "#{error}\n"
   end
-  guess
+end
+
+def validate_guess(guess, board)
+  return 'Incorrect number of colors entered. Try again. Do not separate colors by spaces.' if guess.length != 4
+  return 'Incorrect color entered. Only put in the color capitals. Try again' unless guess.all? do |color|
+    board.colors.include?(color)
+  end
+
+  nil
 end
 
 mastermind
